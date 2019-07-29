@@ -40,7 +40,6 @@ export class ServantModel {
 				}
 			}
 		}
-
 		return servants;
 	}
 
@@ -54,18 +53,20 @@ export class ServantModel {
 }
 
 export class ServantProvider implements vscode.TreeDataProvider<Servant> {
-	private model: ServantModel = new ServantModel(this.uri);
+	private model: ServantModel;
 
 	public getTreeItem(element: Servant): vscode.TreeItem {
 		return {
-			label: Servant.name,
+			label: element.name,
 			collapsibleState: vscode.TreeItemCollapsibleState.None
 		};
 	}
 
 	public getChildren(element?: Servant): vscode.ProviderResult<Servant[]> {
-		return this.model.roots;
+		return element ? [] : this.model.roots;
 	}
 
-	constructor(public readonly uri: string) {}
+	constructor(public readonly uri: string) {
+		this.model = new ServantModel(this.uri);
+	}
 }

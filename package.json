@@ -10,16 +10,29 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onView:empressView"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
-			{
-				"command": "extension.helloWorld",
-				"title": "Hello World"
-			}
-		]
+		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "empress-view",
+					"title": "Empress ",
+					"icon": "media/planet.svg"
+				}
+			]
+		},
+		"views": {
+			"empress-view": [
+				{
+					"id": "empressView",
+					"name": "empress"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
