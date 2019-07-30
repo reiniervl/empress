@@ -15,6 +15,10 @@
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
+			{
+				"command": "empress.start",
+				"title": "start"
+			}
 		],
 		"viewsContainers": {
 			"activitybar": [
@@ -30,6 +34,15 @@
 				{
 					"id": "empressView",
 					"name": "empress"
+				}
+			]
+		},
+		"menus": {
+			"view/item/context": [
+				{
+					"command": "empress.start",
+					"when": "view == empressView && viewItem == servant",
+					"group": "inline"
 				}
 			]
 		}
