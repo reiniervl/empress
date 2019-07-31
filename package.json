@@ -20,7 +20,7 @@
 		"type": "git"
 	},
 	"license": "(MIT OR Apache-2.0)",
-	"icon": "https://rvlstudio.com/empress/logo_square.png",
+	"icon": "media/logo_square.png",
 	"galleryBanner": {
 		"color": "#C80000",
 		"theme": "dark"
