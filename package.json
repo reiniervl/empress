@@ -15,6 +15,11 @@
 		"url": "https://rvlstudio.com"
 	},
 	"publisher": "rvlstudio",
+	"repository": {
+		"url": "https://github.com/reiniervl/empress.git",
+		"type": "git"
+	},
+	"license": "(MIT OR Apache-2.0)",
 	"icon": "https://rvlstudio.com/empress/logo_square.png",
 	"galleryBanner": {
 		"color": "#C80000",
