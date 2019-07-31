@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { exec, execSync, spawn, spawnSync } from "child_process";
+import { spawn, spawnSync } from "child_process";
 
 export enum ServantStatus {
 	Running = "Running",
@@ -9,23 +9,30 @@ export enum ServantStatus {
 	Unknown = "Unknown"
 }
 
-export class Servant {	
+export class Servant {
+	private _onDidChangeServant: vscode.EventEmitter<Servant | string> = new vscode.EventEmitter<Servant | string>();
+	readonly onDidChangeServant: vscode.Event<Servant | string> = this._onDidChangeServant.event;
+
+	private change(): void {
+		this._onDidChangeServant.fire();
+	}
+
 	public start() {
 		let result = spawn(ServantModel.serverCmd, ['start', this.name]);
 				result.on('error', (n) => console.log(`error with message: ${n}`));
 				result.on('message', (n) => console.log(`message: ${n}`));
 				result.on('close', (n) => console.log(`closed with code: ${n}`));
-				result.on('exit', (n) => {console.log(`exit with code: ${n}`);  });
+				result.on('exit', (n) => {console.log(`exit with code: ${n}`);  this.change(); });
 				result.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
 	}
 
 	public stop() {
-		spawn(ServantModel.serverCmd, ['stop', this.name])
-			.on('error', (n) => console.log(`error with message: ${n}`))
-			.on('message', (n) => console.log(`message: ${n}`))
-			.on('close', (n) => console.log(`closed with code: ${n}`))
-			.on('exit', (n) => console.log(`exit with code: ${n}`))
-			.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
+		let result = spawn(ServantModel.serverCmd, ['stop', this.name]);
+		result.on('error', (n) => console.log(`error with message: ${n}`));
+		result.on('message', (n) => console.log(`message: ${n}`));
+		result.on('close', (n) => console.log(`closed with code: ${n}`));
+		result.on('exit', (n) => {console.log(`exit with code: ${n}`);  this.change(); });
+		result.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
 	}
 
 	public get status(): ServantStatus {
@@ -42,6 +49,13 @@ export class ServantModel {
 	public static serverLocation: string;	
 	public static javaCmd: string;
 	public static serverCmd: string;
+
+	private _onDidChangeModel: vscode.EventEmitter<Servant | string> = new vscode.EventEmitter<Servant | string>();
+	readonly onDidChangeModel: vscode.Event<Servant | string> = this._onDidChangeModel.event;
+
+	private change(): void {
+		this._onDidChangeModel.fire();
+	}
 
 
 	private listServants(): string[] {
@@ -70,16 +84,18 @@ export class ServantModel {
 			let serv = this.roots.find((s) => s.name === servant.name);
 			if(serv) {
 				serv.start();
+				serv.onDidChangeServant(() => this.change());
 			} else {
 				console.log(`server ${servant} not found`);
 			}
 		});
 
 		vscode.commands.registerCommand('empress.stop', (servant: Servant) => {
-			console.log(`Start clicked for ${servant.name}`);
+			console.log(`Stop clicked for ${servant.name}`);
 			let serv = this.roots.find((s) => s.name === servant.name);
 			if(serv) {
 				serv.stop();
+				serv.onDidChangeServant(() => this.change());
 			} else {
 				console.log(`server ${servant} not found`);
 			}
@@ -119,5 +135,6 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 	constructor(public readonly uri: string) {
 		this.model = new ServantModel(this.uri);
 		vscode.commands.registerCommand('empress.refresh', () => this._onDidChangeTreeData.fire());
+		this.model.onDidChangeModel((e) => this._onDidChangeTreeData.fire());
 	}
 }
