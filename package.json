@@ -14,22 +14,25 @@
 		"email": "info@rvlstudio.com",
 		"url": "https://rvlstudio.com"
 	},
+	"publisher": "rvlstudio",
 	"icon": "media/logo_square.png",
-  "galleryBanner": {
-    "color": "#C80000",
-    "theme": "dark"
-  },
+	"galleryBanner": {
+		"color": "#C80000",
+		"theme": "dark"
+	},
 	"activationEvents": [
 		"onView:empressView"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"configuration":[
+		"configuration": [
 			{
 				"title": "empress",
 				"properties": {
 					"empress.openlibertyBaseDirectory": {
-						"type": ["string"],
+						"type": [
+							"string"
+						],
 						"description": "path to the folder where openliberty is installed ('*/wlp/')"
 					}
 				}
