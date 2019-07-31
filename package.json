@@ -2,18 +2,39 @@
 	"name": "empress",
 	"displayName": "empress",
 	"description": "Confine your Liberty",
-	"version": "0.0.1",
+	"version": "1.0.0",
 	"engines": {
 		"vscode": "^1.36.0"
 	},
 	"categories": [
 		"Other"
 	],
+	"author": {
+		"name": "Reinier van Leussen",
+		"email": "info@rvlstudio.com",
+		"url": "https://rvlstudio.com"
+	},
+	"icon": "media/logo_square.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
 	"activationEvents": [
 		"onView:empressView"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"configuration":[
+			{
+				"title": "empress",
+				"properties": {
+					"empress.openlibertyBaseDirectory": {
+						"type": ["string"],
+						"description": "path to the folder where openliberty is installed ('*/wlp/')"
+					}
+				}
+			}
+		],
 		"commands": [
 			{
 				"command": "empress.start",
