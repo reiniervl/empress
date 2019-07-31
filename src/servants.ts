@@ -4,9 +4,10 @@ import * as fs from "fs";
 import { spawn, spawnSync } from "child_process";
 
 export enum ServantStatus {
-	Running = "Running",
-	NotRunning = "Not Running",
-	Unknown = "Unknown"
+	Running = "running",
+	NotRunning = "not running",
+	Starting = "starting",
+	Stopping = "stopping",
 }
 
 export class Servant {
@@ -20,15 +21,19 @@ export class Servant {
 	}
 
 	public start() {
+		let info = vscode.window.setStatusBarMessage(`Starting server: ${this.name}`);
 		spawn(ServantModel.serverCmd, ['start', this.name])
 			.on('error', (n) => console.error(`error string server ${this.name} with message: ${n}`))
-			.on('message', (n) => console.log(`message: ${n}`));
+			.on('message', (n) => console.log(`message: ${n}`))
+			.on('exit', () => info.dispose());
 	}
 
 	public stop() {
+		let info = vscode.window.setStatusBarMessage(`Stopping server: ${this.name}`);
 		spawn(ServantModel.serverCmd, ['stop', this.name])
 			.on('error', (n) => console.error(`error string server ${this.name} with message: ${n}`))
-			.on('message', (n) => console.log(`message: ${n}`));
+			.on('message', (n) => console.log(`message: ${n}`))
+			.on('exit', () => info.dispose());
 	}
 
 	public get status(): ServantStatus {
@@ -81,9 +86,6 @@ export class ServantModel {
 	constructor(public readonly serverDir: string) {
 		ServantModel.libertyBase = serverDir;
 		ServantModel.serverCmd = path.resolve(serverDir, './bin/server');
-		
-		vscode.commands.registerCommand('empress.start', (servant: Servant) => servant.start());
-		vscode.commands.registerCommand('empress.stop', (servant: Servant) => servant.stop());
 	}
 }
 
@@ -98,7 +100,8 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 			return {
 				label: element.name,
 				collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
-				contextValue: 'servant'
+				contextValue: element.status === ServantStatus.Running ? 'running' : 'notrunning',
+				iconPath: vscode.ThemeIcon.Folder,
 			};
 		} else {
 			return {
@@ -120,5 +123,8 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 		this.model = new ServantModel(this.uri);
 		vscode.commands.registerCommand('empress.refresh', () => this._onDidChangeTreeData.fire());
 		this.model.onDidChangeModel((e) => this._onDidChangeTreeData.fire());
+		
+		vscode.commands.registerCommand('empress.start', (servant: Servant) => servant.start());
+		vscode.commands.registerCommand('empress.stop', (servant: Servant) => servant.stop());
 	}
 }

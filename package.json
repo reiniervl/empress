@@ -17,26 +17,25 @@
 		"commands": [
 			{
 				"command": "empress.start",
-				"title": "start"
+				"title": "start",
+				"icon": {
+					"dark": "media/dark/play.svg",
+					"light": "media/light/play.svg"
+				}
 			},
 			{
 				"command": "empress.stop",
-				"title": "stop"
+				"title": "stop",
+				"icon": {
+					"dark": "media/dark/stop.svg",
+					"light": "media/light/stop.svg"
+				}
 			},
 			{
 				"command": "empress.refresh",
 				"title": "refresh"
 			}
 		],
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "empress-view",
-					"title": "Empress ",
-					"icon": "media/planet.svg"
-				}
-			]
-		},
 		"views": {
 			"explorer": [
 				{
@@ -56,12 +55,12 @@
 			"view/item/context": [
 				{
 					"command": "empress.start",
-					"when": "view == empressView && viewItem == servant",
+					"when": "view == empressView && viewItem == notrunning",
 					"group": "inline"
 				},
 				{
 					"command": "empress.stop",
-					"when": "view == empressView && viewItem == servant",
+					"when": "view == empressView && viewItem == running",
 					"group": "inline"
 				}
 			]
