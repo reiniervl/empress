@@ -18,6 +18,14 @@
 			{
 				"command": "empress.start",
 				"title": "start"
+			},
+			{
+				"command": "empress.stop",
+				"title": "stop"
+			},
+			{
+				"command": "empress.refresh",
+				"title": "refresh"
 			}
 		],
 		"viewsContainers": {
@@ -38,9 +46,21 @@
 			]
 		},
 		"menus": {
+			"view/title": [
+				{
+					"command": "empress.refresh",
+					"when": "view == empressView",
+					"group": "navigation"
+				}
+			],
 			"view/item/context": [
 				{
 					"command": "empress.start",
+					"when": "view == empressView && viewItem == servant",
+					"group": "inline"
+				},
+				{
+					"command": "empress.stop",
 					"when": "view == empressView && viewItem == servant",
 					"group": "inline"
 				}

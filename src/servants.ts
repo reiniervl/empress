@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { exec, execSync } from "child_process";
+import { exec, execSync, spawn, spawnSync } from "child_process";
 
 export enum ServantStatus {
 	Running = "Running",
@@ -9,59 +9,43 @@ export enum ServantStatus {
 	Unknown = "Unknown"
 }
 
-export class Servant {
-	private readonly servantDir: string;
-	private readonly pidDir: string;
-	private readonly pidFile: string;
-	private readonly javaCmd = `java -javaagent:${path.resolve(ServantModel.serverLocation, 'bin/tools/ws-javaagent.jar')} -jar ${path.resolve(ServantModel.serverLocation, 'bin/tools/ws-server.jar')}`;
-
-	
+export class Servant {	
 	public start() {
-		let cmd = `${this.javaCmd} --start ${this.name}`;
-		exec(cmd).addListener("message", (m) => console.log(m));
+		let result = spawn(ServantModel.serverCmd, ['start', this.name]);
+				result.on('error', (n) => console.log(`error with message: ${n}`));
+				result.on('message', (n) => console.log(`message: ${n}`));
+				result.on('close', (n) => console.log(`closed with code: ${n}`));
+				result.on('exit', (n) => {console.log(`exit with code: ${n}`);  });
+				result.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
 	}
 
 	public stop() {
-		let cmd = `${this.javaCmd} --stop ${this.name}`;
-		exec(cmd).addListener("message", (m) => console.log(m));
+		spawn(ServantModel.serverCmd, ['stop', this.name])
+			.on('error', (n) => console.log(`error with message: ${n}`))
+			.on('message', (n) => console.log(`message: ${n}`))
+			.on('close', (n) => console.log(`closed with code: ${n}`))
+			.on('exit', (n) => console.log(`exit with code: ${n}`))
+			.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
 	}
 
 	public get status(): ServantStatus {
-		if(fs.existsSync(path.resolve(this.servantDir, './workarea/.sLock'))) {
-			if(!fs.existsSync(path.resolve(this.servantDir, './workarea/.sCommand'))) {
-				return ServantStatus.NotRunning;
-			}
-
-			if(fs.existsSync(this.pidFile)) {
-				let pid = execSync(`cat ${this.pidFile}`, {encoding: "utf8"}).trim();
-				let running = execSync(`if ps -p ${pid} > /dev/null 2>&1; then echo true; fi`, {encoding: "utf8"});
-				
-				if(running) {
-					return ServantStatus.Running;
-				}
-			}
-
-			if(execSync(`${this.javaCmd} ${this.name} --status > /dev/null; echo $?`, {encoding : "utf8"}) !== '0') {
-				exec(`rm -f ${path.resolve(this.servantDir, './workarea/.sCommand')}`);
-				return ServantStatus.NotRunning;
-			} else {
-				return ServantStatus.Running;
-			}
-		}
-		return ServantStatus.Unknown;
+		return spawnSync(ServantModel.serverCmd, ['status', this.name]).status === 0
+			? ServantStatus.Running
+			: ServantStatus.NotRunning;
 	}
 
 	constructor(public readonly name: string) {
-		this.servantDir = path.resolve(ServantModel.serverLocation, './usr/servers', name);
-		this.pidDir = path.resolve(ServantModel.serverLocation, './usr/servers/.pid');
-		this.pidFile = path.resolve(this.pidDir, `${name}.pid`);
 	}
 }
 
 export class ServantModel {
-	public static serverLocation = '';
+	public static serverLocation: string;	
+	public static javaCmd: string;
+	public static serverCmd: string;
+
+
 	private listServants(): string[] {
-		let serversPath = path.resolve(this.serverLocation, './usr/servers');
+		let serversPath = path.resolve(this.serverDir, './usr/servers');
 		var servants: string[] = [];
 		if(fs.existsSync(serversPath)) {
 			for(var d of fs.readdirSync(serversPath, {withFileTypes: true})) {
@@ -77,13 +61,37 @@ export class ServantModel {
 		return this.listServants().map((s) => new Servant(s));
 	}
 
-	constructor(public readonly serverLocation: string) {
-		ServantModel.serverLocation = serverLocation;
+	constructor(public readonly serverDir: string) {
+		ServantModel.serverLocation = serverDir;
+		ServantModel.serverCmd = path.resolve(serverDir, './bin/server');
+		
+		vscode.commands.registerCommand('empress.start', (servant: Servant) => {
+			console.log(`Start clicked for ${servant.name}`);
+			let serv = this.roots.find((s) => s.name === servant.name);
+			if(serv) {
+				serv.start();
+			} else {
+				console.log(`server ${servant} not found`);
+			}
+		});
+
+		vscode.commands.registerCommand('empress.stop', (servant: Servant) => {
+			console.log(`Start clicked for ${servant.name}`);
+			let serv = this.roots.find((s) => s.name === servant.name);
+			if(serv) {
+				serv.stop();
+			} else {
+				console.log(`server ${servant} not found`);
+			}
+		});
 	}
 }
 
 export class ServantProvider implements vscode.TreeDataProvider<Servant | string> {
 	private model: ServantModel;
+
+	private _onDidChangeTreeData: vscode.EventEmitter<Servant | string> = new vscode.EventEmitter<Servant | string>();
+	readonly onDidChangeTreeData: vscode.Event<Servant | string> = this._onDidChangeTreeData.event;
 
 	public getTreeItem(element: Servant | string): vscode.TreeItem {
 		if(element instanceof Servant) {
@@ -110,5 +118,6 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 
 	constructor(public readonly uri: string) {
 		this.model = new ServantModel(this.uri);
+		vscode.commands.registerCommand('empress.refresh', () => this._onDidChangeTreeData.fire());
 	}
 }
