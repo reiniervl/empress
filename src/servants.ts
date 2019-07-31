@@ -10,6 +10,8 @@ export enum ServantStatus {
 }
 
 export class Servant {
+	private readonly servantDir: string;
+
 	private _onDidChangeServant: vscode.EventEmitter<Servant | string> = new vscode.EventEmitter<Servant | string>();
 	readonly onDidChangeServant: vscode.Event<Servant | string> = this._onDidChangeServant.event;
 
@@ -18,21 +20,15 @@ export class Servant {
 	}
 
 	public start() {
-		let result = spawn(ServantModel.serverCmd, ['start', this.name]);
-				result.on('error', (n) => console.log(`error with message: ${n}`));
-				result.on('message', (n) => console.log(`message: ${n}`));
-				result.on('close', (n) => console.log(`closed with code: ${n}`));
-				result.on('exit', (n) => {console.log(`exit with code: ${n}`);  this.change(); });
-				result.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
+		spawn(ServantModel.serverCmd, ['start', this.name])
+			.on('error', (n) => console.error(`error string server ${this.name} with message: ${n}`))
+			.on('message', (n) => console.log(`message: ${n}`));
 	}
 
 	public stop() {
-		let result = spawn(ServantModel.serverCmd, ['stop', this.name]);
-		result.on('error', (n) => console.log(`error with message: ${n}`));
-		result.on('message', (n) => console.log(`message: ${n}`));
-		result.on('close', (n) => console.log(`closed with code: ${n}`));
-		result.on('exit', (n) => {console.log(`exit with code: ${n}`);  this.change(); });
-		result.on('disconnect', (n: any[]) => n.forEach((na) => console.log(`disconnected with array: ${na}`)));
+		spawn(ServantModel.serverCmd, ['stop', this.name])
+			.on('error', (n) => console.error(`error string server ${this.name} with message: ${n}`))
+			.on('message', (n) => console.log(`message: ${n}`));
 	}
 
 	public get status(): ServantStatus {
@@ -42,11 +38,13 @@ export class Servant {
 	}
 
 	constructor(public readonly name: string) {
+		this.servantDir = path.resolve(ServantModel.libertyBase, './usr/servers', name);
+		fs.watchFile(path.resolve(this.servantDir, './workarea/.sCommand'),() => this.change());
 	}
 }
 
 export class ServantModel {
-	public static serverLocation: string;	
+	public static libertyBase: string;	
 	public static javaCmd: string;
 	public static serverCmd: string;
 
@@ -72,34 +70,20 @@ export class ServantModel {
 	}
 
 	public get roots(): Servant[] {
-		return this.listServants().map((s) => new Servant(s));
+		return this.listServants().map((s) => {
+			let servant = new Servant(s);
+			servant.onDidChangeServant((e) => this.change());
+			return servant;
+		}
+			);
 	}
 
 	constructor(public readonly serverDir: string) {
-		ServantModel.serverLocation = serverDir;
+		ServantModel.libertyBase = serverDir;
 		ServantModel.serverCmd = path.resolve(serverDir, './bin/server');
 		
-		vscode.commands.registerCommand('empress.start', (servant: Servant) => {
-			console.log(`Start clicked for ${servant.name}`);
-			let serv = this.roots.find((s) => s.name === servant.name);
-			if(serv) {
-				serv.start();
-				serv.onDidChangeServant(() => this.change());
-			} else {
-				console.log(`server ${servant} not found`);
-			}
-		});
-
-		vscode.commands.registerCommand('empress.stop', (servant: Servant) => {
-			console.log(`Stop clicked for ${servant.name}`);
-			let serv = this.roots.find((s) => s.name === servant.name);
-			if(serv) {
-				serv.stop();
-				serv.onDidChangeServant(() => this.change());
-			} else {
-				console.log(`server ${servant} not found`);
-			}
-		});
+		vscode.commands.registerCommand('empress.start', (servant: Servant) => servant.start());
+		vscode.commands.registerCommand('empress.stop', (servant: Servant) => servant.stop());
 	}
 }
 

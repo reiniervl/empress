@@ -38,7 +38,7 @@
 			]
 		},
 		"views": {
-			"empress-view": [
+			"explorer": [
 				{
 					"id": "empressView",
 					"name": "empress"
