@@ -2,7 +2,7 @@
 	"name": "empress",
 	"displayName": "empress",
 	"description": "Confine your Liberty",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"engines": {
 		"vscode": "^1.36.0"
 	},
@@ -14,9 +14,10 @@
 		"email": "info@rvlstudio.com",
 		"url": "https://rvlstudio.com"
 	},
+	"publisher": "rvlstudio",
 	"icon": "media/logo_square.png",
   "galleryBanner": {
-    "color": "#C80000",
+    "color": "#000000",
     "theme": "dark"
   },
 	"activationEvents": [
