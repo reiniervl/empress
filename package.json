@@ -15,6 +15,7 @@
 		"url": "https://rvlstudio.com"
 	},
 	"publisher": "rvlstudio",
+<<<<<<< HEAD
 	"icon": "media/logo_square.png",
   "galleryBanner": {
     "color": "#000000",
@@ -22,18 +23,31 @@
 	},
 	"repository": {
 		"url": "https://github.com/reiniervl/empress.git"
+=======
+	"repository": {
+		"url": "https://github.com/reiniervl/empress.git",
+		"type": "git"
+	},
+	"license": "(MIT OR Apache-2.0)",
+	"icon": "media/logo_square.png",
+	"galleryBanner": {
+		"color": "#C80000",
+		"theme": "dark"
+>>>>>>> 469011b4544a3a95e37b50df104d26a736f76378
 	},
 	"activationEvents": [
 		"onView:empressView"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
-		"configuration":[
+		"configuration": [
 			{
 				"title": "empress",
 				"properties": {
 					"empress.openlibertyBaseDirectory": {
-						"type": ["string"],
+						"type": [
+							"string"
+						],
 						"description": "path to the folder where openliberty is installed ('*/wlp/')"
 					}
 				}
