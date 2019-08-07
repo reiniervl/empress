@@ -19,7 +19,10 @@
   "galleryBanner": {
     "color": "#000000",
     "theme": "dark"
-  },
+	},
+	"repository": {
+		"url": "https://github.com/reiniervl/empress.git"
+	},
 	"activationEvents": [
 		"onView:empressView"
 	],
