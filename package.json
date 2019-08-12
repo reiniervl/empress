@@ -71,6 +71,10 @@
 			{
 				"command": "empress.refresh",
 				"title": "refresh"
+			},
+			{
+				"command": "empress.openFile",
+				"title": "open"
 			}
 		],
 		"views": {

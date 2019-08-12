@@ -10,6 +10,11 @@ export enum ServantStatus {
 	Stopping = "stopping",
 }
 
+export interface ILog {
+	name: string;
+	uri: vscode.Uri;
+}
+
 export class Servant {
 	private readonly servantDir: string;
 
@@ -36,9 +41,6 @@ export class Servant {
 			.on('exit', () => { info.dispose(); this.change(); });
 	}
 
-	/**
-	 * restart
-	 */
 	public restart() {
 		this.stop().on('exit', () => { this.change(), this.start(); } );
 	}
@@ -47,6 +49,17 @@ export class Servant {
 		return spawnSync(ServantModel.serverCmd, ['status', this.name]).status === 0
 			? ServantStatus.Running
 			: ServantStatus.NotRunning;
+	}
+
+	public get logs(): ILog[] {
+		let logDir = path.resolve(this.servantDir, 'logs');
+		var logs: ILog[] = [];
+		for(var f of fs.readdirSync(logDir, {withFileTypes: true})) {
+			if(f.isFile && f.name === 'console.log' || f.name === 'messages.log') {
+				logs.push({ name: f.name, uri: vscode.Uri.parse('file://' + path.resolve(logDir, f.name)) });
+			}
+		}
+		return logs;
 	}
 
 	constructor(public readonly name: string) {
@@ -100,17 +113,17 @@ export class ServantModel {
 	}
 }
 
-export class ServantProvider implements vscode.TreeDataProvider<Servant | string> {
+export class ServantProvider implements vscode.TreeDataProvider<Servant | ILog> {
 	private model: ServantModel;
 
-	private _onDidChangeTreeData: vscode.EventEmitter<Servant | string> = new vscode.EventEmitter<Servant | string>();
-	readonly onDidChangeTreeData: vscode.Event<Servant | string> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<Servant | ILog> = new vscode.EventEmitter<Servant | ILog>();
+	readonly onDidChangeTreeData: vscode.Event<Servant | ILog> = this._onDidChangeTreeData.event;
 
-	public getTreeItem(element: Servant | string): vscode.TreeItem {
+	public getTreeItem(element: Servant | ILog): vscode.TreeItem {
 		if(element instanceof Servant) {
 			return {
 				label: element.name,
-				collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
+				collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
 				contextValue: element.status === ServantStatus.Running ? 'running' : 'notrunning',
 				iconPath: element.status === ServantStatus.Running 
 					? {
@@ -124,16 +137,22 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 			};
 		} else {
 			return {
-				label: element,
+				label: element.name,
+				contextValue: 'log',
+				command: {
+					command: 'empress.openFile',
+					arguments: [element.uri],
+					title: 'open'
+				},
 				collapsibleState: vscode.TreeItemCollapsibleState.None
 			};
 		}
 	}
 
-	public getChildren(element?: Servant | string | undefined): vscode.ProviderResult<Servant[] | string[]> {
+	public getChildren(element?: Servant | ILog | undefined): vscode.ProviderResult<Servant[] | ILog[]> {
 		return element 
 			? element instanceof Servant 
-				? ["status: " + element.status] 
+				? element.logs
 				: [] 
 			: this.model.roots;
 	}
@@ -146,5 +165,6 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 		vscode.commands.registerCommand('empress.start', (servant: Servant) => servant.start());
 		vscode.commands.registerCommand('empress.stop', (servant: Servant) => servant.stop());
 		vscode.commands.registerCommand('empress.restart', (servant: Servant) => servant.restart());
+		vscode.commands.registerCommand('empress.openFile', (file) => vscode.window.showTextDocument(file) );
 	}
 }
