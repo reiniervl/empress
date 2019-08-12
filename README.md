@@ -23,6 +23,11 @@ There is one setting required for this extension to work:
 
 ## Release Notes
 
+### 1.0.2
+- Icon update
+- Restart option
+- Open logs from the tree-item
+
 ### 1.0.1
 
 - Fixed path bug
