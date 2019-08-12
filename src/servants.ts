@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import * as fs from "fs";
-import { spawn, spawnSync } from "child_process";
+import { spawn, spawnSync, ChildProcess } from "child_process";
 
 export enum ServantStatus {
 	Running = "running",
@@ -20,20 +20,27 @@ export class Servant {
 		this._onDidChangeServant.fire();
 	}
 
-	public start() {
+	public start(): ChildProcess {
 		let info = vscode.window.setStatusBarMessage(`Starting server: ${this.name}`);
-		spawn(ServantModel.serverCmd, ['start', this.name])
+		return spawn(ServantModel.serverCmd, ['start', this.name])
 			.on('error', (n) => console.error(`error string server ${this.name} with message: ${n}`))
 			.on('message', (n) => console.log(`message: ${n}`))
-			.on('exit', () => info.dispose());
+			.on('exit', () => { info.dispose(); this.change(); });
 	}
 
-	public stop() {
+	public stop(): ChildProcess {
 		let info = vscode.window.setStatusBarMessage(`Stopping server: ${this.name}`);
-		spawn(ServantModel.serverCmd, ['stop', this.name])
+		return spawn(ServantModel.serverCmd, ['stop', this.name])
 			.on('error', (n) => console.error(`error string server ${this.name} with message: ${n}`))
 			.on('message', (n) => console.log(`message: ${n}`))
-			.on('exit', () => info.dispose());
+			.on('exit', () => { info.dispose(); this.change(); });
+	}
+
+	/**
+	 * restart
+	 */
+	public restart() {
+		this.stop().on('exit', () => { this.change(), this.start(); } );
 	}
 
 	public get status(): ServantStatus {
@@ -105,7 +112,15 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 				label: element.name,
 				collapsibleState: vscode.TreeItemCollapsibleState.Expanded,
 				contextValue: element.status === ServantStatus.Running ? 'running' : 'notrunning',
-				iconPath: vscode.ThemeIcon.Folder,
+				iconPath: element.status === ServantStatus.Running 
+					? {
+						dark: path.join(__filename, '../','../','media/','dark/','server-started.svg'),
+						light: path.join(__filename, '../','../','media/','light/','server-started.svg')
+					} 
+					:{
+						dark: path.join(__filename, '../','../','media/','dark/','server.svg'),
+						light: path.join(__filename, '../','../','media/','light/','server.svg')
+					}
 			};
 		} else {
 			return {
@@ -130,5 +145,6 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | string
 		
 		vscode.commands.registerCommand('empress.start', (servant: Servant) => servant.start());
 		vscode.commands.registerCommand('empress.stop', (servant: Servant) => servant.stop());
+		vscode.commands.registerCommand('empress.restart', (servant: Servant) => servant.restart());
 	}
 }

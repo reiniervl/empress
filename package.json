@@ -15,26 +15,16 @@
 		"url": "https://rvlstudio.com"
 	},
 	"publisher": "rvlstudio",
-<<<<<<< HEAD
 	"icon": "media/logo_square.png",
   "galleryBanner": {
     "color": "#000000",
     "theme": "dark"
 	},
 	"repository": {
-		"url": "https://github.com/reiniervl/empress.git"
-=======
-	"repository": {
 		"url": "https://github.com/reiniervl/empress.git",
 		"type": "git"
 	},
 	"license": "(MIT OR Apache-2.0)",
-	"icon": "media/logo_square.png",
-	"galleryBanner": {
-		"color": "#C80000",
-		"theme": "dark"
->>>>>>> 469011b4544a3a95e37b50df104d26a736f76378
-	},
 	"activationEvents": [
 		"onView:empressView"
 	],
@@ -71,6 +61,14 @@
 				}
 			},
 			{
+				"command": "empress.restart",
+				"title": "restart",
+				"icon": {
+					"dark": "media/dark/refresh.svg",
+					"light": "media/light/refresh.svg"
+				}
+			},
+			{
 				"command": "empress.refresh",
 				"title": "refresh"
 			}
@@ -94,12 +92,17 @@
 			"view/item/context": [
 				{
 					"command": "empress.start",
-					"when": "view == empressView && viewItem == notrunning",
+					"when": "viewItem == notrunning",
 					"group": "inline"
 				},
 				{
 					"command": "empress.stop",
-					"when": "view == empressView && viewItem == running",
+					"when": "viewItem == running",
+					"group": "inline"
+				},
+				{
+					"command": "empress.restart",
+					"when": "viewItem == running",
 					"group": "inline"
 				}
 			]
