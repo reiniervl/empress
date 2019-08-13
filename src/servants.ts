@@ -56,7 +56,8 @@ export class Servant {
 		var logs: ILog[] = [];
 		for(var f of fs.readdirSync(logDir, {withFileTypes: true})) {
 			if(f.isFile && f.name === 'console.log' || f.name === 'messages.log') {
-				logs.push({ name: f.name, uri: vscode.Uri.parse('file://' + path.resolve(logDir, f.name)) });
+				let schema: string = process.platform === 'win32' ? 'file:///' : 'file://';
+				logs.push({ name: f.name, uri: vscode.Uri.parse(schema + path.resolve(logDir, f.name)) });
 			}
 		}
 		return logs;
