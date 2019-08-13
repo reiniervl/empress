@@ -23,15 +23,16 @@ There is one setting required for this extension to work:
 
 ## Release Notes
 
+### 1.0.3
+For visability, the log files and configuration files (server.xml) are seperated in there own folders
+
 ### 1.0.2
-- Icon update
-- Restart option
-- Open logs from the tree-item
+Log files can now be opened from directly from the extension.
+The icons are bit more coherent.
 
 ### 1.0.1
 
-- Fixed path bug
-- Windows compatible
+Striving for Windows compatibility
 
 ### 1.0.0
 

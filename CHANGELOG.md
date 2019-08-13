@@ -4,6 +4,8 @@ All notable changes to the "empress" extension will be documented in this file.
 
 ### 1.0.3 2019-08-13
  - Open log files on Windows
+ - Seperate files in to folders
+ - Open server.xml file
 
 ### 1.0.2 2019-08-12
 - Icon update
