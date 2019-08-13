@@ -10,6 +10,11 @@ export enum ServantStatus {
 	Stopping = "stopping",
 }
 
+export interface IFolder {
+	name: string;
+	files: IFile[];
+}
+
 export interface IFile {
 	name: string;
 	uri: vscode.Uri;
@@ -17,6 +22,7 @@ export interface IFile {
 
 export class Servant {
 	private readonly servantDir: string;
+	static readonly schema: string = process.platform === 'win32' ? 'file:///' : 'file://';
 
 	private _onDidChangeServant: vscode.EventEmitter<Servant | string> = new vscode.EventEmitter<Servant | string>();
 	readonly onDidChangeServant: vscode.Event<Servant | string> = this._onDidChangeServant.event;
@@ -51,17 +57,21 @@ export class Servant {
 			: ServantStatus.NotRunning;
 	}
 
-	public get logs(): IFile[] {
+	public get logs(): IFolder {
 		let logDir = path.resolve(this.servantDir, 'logs');
 		var logs: IFile[] = [];
-		let schema: string = process.platform === 'win32' ? 'file:///' : 'file://';
 		for(var f of fs.readdirSync(logDir, {withFileTypes: true})) {
 			if(f.isFile && f.name === 'console.log' || f.name === 'messages.log') {
-				logs.push({ name: f.name, uri: vscode.Uri.parse(schema + path.resolve(logDir, f.name)) });
+				logs.push({ name: f.name, uri: vscode.Uri.parse(Servant.schema + path.resolve(logDir, f.name)) });
 			}
 		}
-		logs.push({name: 'server.xml', uri: vscode.Uri.parse(schema + path.resolve(this.servantDir, 'server.xml'))});
-		return logs;
+		return { name: 'logs', files: logs };
+	}
+
+	public get configuration(): IFolder {
+		var conf: IFile[] = [];
+		conf.push({name: 'server.xml', uri: vscode.Uri.parse(Servant.schema + path.resolve(this.servantDir, 'server.xml'))});
+		return { name: 'configuration', files: conf };
 	}
 
 	constructor(public readonly name: string) {
@@ -115,13 +125,13 @@ export class ServantModel {
 	}
 }
 
-export class ServantProvider implements vscode.TreeDataProvider<Servant | IFile> {
+export class ServantProvider implements vscode.TreeDataProvider<Servant | IFolder | IFile> {
 	private model: ServantModel;
 
-	private _onDidChangeTreeData: vscode.EventEmitter<Servant | IFile> = new vscode.EventEmitter<Servant | IFile>();
-	readonly onDidChangeTreeData: vscode.Event<Servant | IFile> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<Servant | IFolder> = new vscode.EventEmitter<Servant | IFolder>();
+	readonly onDidChangeTreeData: vscode.Event<Servant | IFolder> = this._onDidChangeTreeData.event;
 
-	public getTreeItem(element: Servant | IFile): vscode.TreeItem {
+	public getTreeItem(element: Servant | IFolder | IFile): vscode.TreeItem {
 		if(element instanceof Servant) {
 			return {
 				label: element.name,
@@ -137,6 +147,13 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | IFile>
 						light: path.join(__filename, '../','../','media/','light/','server.svg')
 					}
 			};
+		} else if('files' in element) {
+			return {
+				label: element.name,
+				contextValue: 'folder',
+				collapsibleState: vscode.TreeItemCollapsibleState.Collapsed,
+				iconPath: vscode.ThemeIcon.Folder
+			};
 		} else {
 			return {
 				label: element.name,
@@ -146,16 +163,19 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | IFile>
 					arguments: [element.uri],
 					title: 'open'
 				},
-				collapsibleState: vscode.TreeItemCollapsibleState.None
+				collapsibleState: vscode.TreeItemCollapsibleState.None,
+				iconPath: vscode.ThemeIcon.File
 			};
 		}
 	}
 
-	public getChildren(element?: Servant | IFile | undefined): vscode.ProviderResult<Servant[] | IFile[]> {
+	public getChildren(element?: Servant | IFolder | IFile | undefined): vscode.ProviderResult<Servant[] | IFolder[] | IFile[]> {
 		return element 
 			? element instanceof Servant 
-				? element.logs
-				: [] 
+				? [element.logs, element.configuration ]
+				: 'files' in element 
+					? element.files
+					: []
 			: this.model.roots;
 	}
 
