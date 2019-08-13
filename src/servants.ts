@@ -10,7 +10,7 @@ export enum ServantStatus {
 	Stopping = "stopping",
 }
 
-export interface ILog {
+export interface IFile {
 	name: string;
 	uri: vscode.Uri;
 }
@@ -51,15 +51,16 @@ export class Servant {
 			: ServantStatus.NotRunning;
 	}
 
-	public get logs(): ILog[] {
+	public get logs(): IFile[] {
 		let logDir = path.resolve(this.servantDir, 'logs');
-		var logs: ILog[] = [];
+		var logs: IFile[] = [];
+		let schema: string = process.platform === 'win32' ? 'file:///' : 'file://';
 		for(var f of fs.readdirSync(logDir, {withFileTypes: true})) {
 			if(f.isFile && f.name === 'console.log' || f.name === 'messages.log') {
-				let schema: string = process.platform === 'win32' ? 'file:///' : 'file://';
 				logs.push({ name: f.name, uri: vscode.Uri.parse(schema + path.resolve(logDir, f.name)) });
 			}
 		}
+		logs.push({name: 'server.xml', uri: vscode.Uri.parse(schema + path.resolve(this.servantDir, 'server.xml'))});
 		return logs;
 	}
 
@@ -114,13 +115,13 @@ export class ServantModel {
 	}
 }
 
-export class ServantProvider implements vscode.TreeDataProvider<Servant | ILog> {
+export class ServantProvider implements vscode.TreeDataProvider<Servant | IFile> {
 	private model: ServantModel;
 
-	private _onDidChangeTreeData: vscode.EventEmitter<Servant | ILog> = new vscode.EventEmitter<Servant | ILog>();
-	readonly onDidChangeTreeData: vscode.Event<Servant | ILog> = this._onDidChangeTreeData.event;
+	private _onDidChangeTreeData: vscode.EventEmitter<Servant | IFile> = new vscode.EventEmitter<Servant | IFile>();
+	readonly onDidChangeTreeData: vscode.Event<Servant | IFile> = this._onDidChangeTreeData.event;
 
-	public getTreeItem(element: Servant | ILog): vscode.TreeItem {
+	public getTreeItem(element: Servant | IFile): vscode.TreeItem {
 		if(element instanceof Servant) {
 			return {
 				label: element.name,
@@ -150,7 +151,7 @@ export class ServantProvider implements vscode.TreeDataProvider<Servant | ILog> 
 		}
 	}
 
-	public getChildren(element?: Servant | ILog | undefined): vscode.ProviderResult<Servant[] | ILog[]> {
+	public getChildren(element?: Servant | IFile | undefined): vscode.ProviderResult<Servant[] | IFile[]> {
 		return element 
 			? element instanceof Servant 
 				? element.logs
