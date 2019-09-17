@@ -23,6 +23,9 @@ There is one setting required for this extension to work:
 
 ## Release Notes
 
+### 1.0.4
+Change the base uri without reloading VS Code
+
 ### 1.0.3
 For visability, the log files and configuration files (server.xml) are seperated in there own folders
 

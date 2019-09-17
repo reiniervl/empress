@@ -2,6 +2,9 @@
 
 All notable changes to the "empress" extension will be documented in this file.
 
+### 1.0.4 2019-09-17
+- Changes to the settings will be applied without reload
+
 ### 1.0.3 2019-08-13
  - Open log files on Windows
  - Seperate files in to folders
