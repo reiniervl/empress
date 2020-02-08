@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ServantProvider } from './servants';
 import { resolve } from 'path';
 import { existsSync } from 'fs';
+import { LogView } from './logview';
 
 function setEmpressView() {
 	let configuration = vscode.workspace.getConfiguration('empress');
@@ -24,6 +25,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 	setEmpressView();
+
+	vscode.workspace.registerTextDocumentContentProvider("log", new LogView());
 }
 
 export function deactivate() {}
