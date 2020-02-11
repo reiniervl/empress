@@ -2,6 +2,9 @@
 
 All notable changes to the "empress" extension will be documented in this file.
 
+### 1.0.5 2020-02-11
+- Log files open in a virtual document and are more responsive
+
 ### 1.0.4 2019-09-17
 - Changes to the settings will be applied without reload
 

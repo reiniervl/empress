@@ -23,6 +23,9 @@ There is one setting required for this extension to work:
 
 ## Release Notes
 
+### 1.0.5
+Log files have a file watcher and open in a virtual document
+
 ### 1.0.4
 Change the base uri without reloading VS Code
 

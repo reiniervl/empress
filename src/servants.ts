@@ -117,11 +117,9 @@ export class ServantModel {
 
 	constructor(public readonly serverDir: string) {
 		ServantModel.libertyBase = serverDir;
-		if(process.platform === 'win32') {
-			ServantModel.serverCmd = path.resolve(serverDir, './bin/server.bat');
-		} else {
-			ServantModel.serverCmd = path.resolve(serverDir, './bin/server');
-		}
+		ServantModel.serverCmd = process.platform === 'win32' 
+			? path.resolve(serverDir, './bin/server.bat') 
+			: path.resolve(serverDir, './bin/server');
 	}
 }
 
